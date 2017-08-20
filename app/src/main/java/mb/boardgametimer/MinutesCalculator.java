@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import mb.boardgametimer.model.Action;
+import mb.boardgametimer.model.ActionType;
 
 class MinutesCalculator {
 
@@ -19,12 +20,16 @@ class MinutesCalculator {
 
     private long getDuration(List<Action> actions) {
         long duration = 0L;
-        if (actions == null) {
+        if (actions == null || actions.isEmpty()) {
             return duration;
         }
 
         List<Action> reversedActions = new ArrayList<>(actions);
         Collections.reverse(reversedActions);
+
+        if (actions.get(0).getType() != ActionType.STOP) {
+            throw new IllegalArgumentException("Last action must be STOP.");
+        }
 
         long start = 0L;
         for (Action action : reversedActions) {
