@@ -100,8 +100,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        actions.clear();
 
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
 
         String[] projection = {
                 ActionReaderContract.ActionEntry.COLUMN_NAME_TYPE,
