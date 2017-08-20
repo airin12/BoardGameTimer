@@ -1,6 +1,7 @@
 package mb.boardgametimer;
 
 import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,17 +10,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
 
 import mb.boardgametimer.model.Action;
 import mb.boardgametimer.model.ActionType;
@@ -28,8 +22,9 @@ import mb.boardgametimer.sqlite.ActionReaderDbHelper;
 
 public class MainActivity extends AppCompatActivity {
     private Button startButton;
-    private Button endButton;
+    private Button stopButton;
     private Button pauseButton;
+    private Button resumeButton;
 
     private TextView durationTextView;
 
@@ -43,8 +38,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         startButton = (Button) findViewById(R.id.start_button_id);
-        endButton = (Button) findViewById(R.id.end_button_id);
+        stopButton = (Button) findViewById(R.id.stop_button_id);
         pauseButton = (Button) findViewById(R.id.pause_button_id);
+        resumeButton = (Button) findViewById(R.id.resume_button_id);
+
+        updateButtonsWithState(ActionType.STOP);
 
         durationTextView = (TextView) findViewById(R.id.duration_text_view_id);
 
@@ -54,6 +52,30 @@ public class MainActivity extends AppCompatActivity {
         actionListView.setAdapter(actionAdapter);
 
         dbHelper = new ActionReaderDbHelper(getApplicationContext());
+    }
+
+    private void updateButtonsWithState(ActionType type) {
+        switch (type) {
+            case RESUME:
+            case START:
+                startButton.setEnabled(false);
+                resumeButton.setEnabled(false);
+                stopButton.setEnabled(true);
+                pauseButton.setEnabled(true);
+                break;
+            case STOP:
+                startButton.setEnabled(true);
+                resumeButton.setEnabled(false);
+                stopButton.setEnabled(false);
+                pauseButton.setEnabled(false);
+                break;
+            case PAUSE:
+                startButton.setEnabled(false);
+                resumeButton.setEnabled(true);
+                stopButton.setEnabled(true);
+                pauseButton.setEnabled(false);
+                break;
+        }
     }
 
     @Override
@@ -66,11 +88,8 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        return id == R.id.action_settings || super.onOptionsItemSelected(item);
 
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -81,50 +100,66 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        updateTextViews();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+
+        String[] projection = {
+                ActionReaderContract.ActionEntry.COLUMN_NAME_TYPE,
+                ActionReaderContract.ActionEntry.COLUMN_NAME_TIMESTAMP
+        };
+
+        Cursor cursor = db.query(ActionReaderContract.ActionEntry.TABLE_NAME, projection, null, null, null, null, null);
+        while (cursor.moveToNext()) {
+            ActionType type = ActionType.valueOf(cursor.getString(
+                    cursor.getColumnIndex(ActionReaderContract.ActionEntry.COLUMN_NAME_TYPE)));
+            long timestamp = cursor.getLong(cursor.getColumnIndex(ActionReaderContract.ActionEntry.COLUMN_NAME_TIMESTAMP));
+            actions.addFirst(new Action(type, timestamp));
+        }
+        cursor.close();
+        actionAdapter.notifyDataSetChanged();
+
+        updateButtonsWithState(actions.getFirst().getType());
+        if (actions.getFirst().getType() == ActionType.STOP) {
+            updateDurationTextViewWithMinutes();
+        } else {
+            resetDurationTextView();
+        }
     }
 
-    public void startMeasure(View view){
+    public void startMeasure(View view) {
         actions.clear();
-        dbHelper.getWritableDatabase().execSQL("DELETE FROM "+ActionReaderContract.ActionEntry.TABLE_NAME);
+        dbHelper.getWritableDatabase().delete(ActionReaderContract.ActionEntry.TABLE_NAME, null, null);
         long timestamp = System.currentTimeMillis();
         addNewActionAndUpdateDb(ActionType.START, timestamp);
+        updateButtonsWithState(ActionType.START);
+        resetDurationTextView();
     }
 
-    private void updateStartTextView() {
-        String formattedDate = "";
-    }
-
-    private void updateEndTextView() {
-        String formattedDate = "";
-    }
-
-    private void updateDurationTextView(){
-        String durationText = "";
-//        if(duration != 0){
-//            durationText = duration + " m";
-//        }
-
-        durationTextView.setText("Duration: "+durationText);
-    }
-
-    public void endMeasure(View view){
+    public void stopMeasure(View view) {
         long timestamp = System.currentTimeMillis();
         addNewActionAndUpdateDb(ActionType.STOP, timestamp);
+        updateButtonsWithState(ActionType.STOP);
+
+        updateDurationTextViewWithMinutes();
     }
 
-    private void updateTextViews(){
-        updateStartTextView();
-        updateEndTextView();
-        updateDurationTextView();
+    private void updateDurationTextViewWithMinutes() {
+        MinutesCalculator minutesCalculator = new MinutesCalculator();
+        int minutes = minutesCalculator.getMinutes(actions);
+        durationTextView.setText(String.format("%s %s %s", getResources().getString(R.string.duration), minutes, getResources().getString(R.string.minutes)));
+    }
+
+    private void resetDurationTextView() {
+        durationTextView.setText(R.string.duration);
     }
 
     public void pauseMeasure(View view) {
         long timestamp = System.currentTimeMillis();
         addNewActionAndUpdateDb(ActionType.PAUSE, timestamp);
+        updateButtonsWithState(ActionType.PAUSE);
     }
 
-    private long addNewActionAndUpdateDb(ActionType type, long timestamp){
+    private long addNewActionAndUpdateDb(ActionType type, long timestamp) {
         Action action = new Action(type, timestamp);
         actions.addFirst(action);
         actionAdapter.notifyDataSetChanged();
@@ -147,5 +182,6 @@ public class MainActivity extends AppCompatActivity {
     public void resumeMeasure(View view) {
         long timestamp = System.currentTimeMillis();
         addNewActionAndUpdateDb(ActionType.RESUME, timestamp);
+        updateButtonsWithState(ActionType.RESUME);
     }
 }

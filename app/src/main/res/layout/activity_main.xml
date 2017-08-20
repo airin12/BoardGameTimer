@@ -18,11 +18,11 @@
         android:text="@string/start_button_text" />
 
     <Button
-        android:id="@+id/end_button_id"
+        android:id="@+id/stop_button_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:onClick="endMeasure"
+        android:onClick="stopMeasure"
         android:text="@string/end_button_text" />
 
     <Button

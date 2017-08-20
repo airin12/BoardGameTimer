@@ -1,10 +1,12 @@
 package mb.boardgametimer;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import mb.boardgametimer.model.Action;
 
-public class MinutesCalculator {
+class MinutesCalculator {
 
     int getMinutes(List<Action> actions) {
         long duration = getDuration(actions);
@@ -21,8 +23,11 @@ public class MinutesCalculator {
             return duration;
         }
 
+        List<Action> reversedActions = new ArrayList<>(actions);
+        Collections.reverse(reversedActions);
+
         long start = 0L;
-        for (Action action : actions) {
+        for (Action action : reversedActions) {
             switch (action.getType()) {
                 case START:
                 case RESUME:
