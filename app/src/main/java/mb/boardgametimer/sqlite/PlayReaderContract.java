@@ -11,5 +11,6 @@ public class PlayReaderContract {
         public static final String TABLE_NAME = "play";
         public static final String COLUMN_NAME_DURATION = "duration";
         public static final String COLUMN_NAME_TEXT = "text";
+        public static final String COLUMN_NAME_TIMESTAMP = "timestamp";
     }
 }
