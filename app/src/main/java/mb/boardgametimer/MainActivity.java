@@ -17,6 +17,7 @@ import java.util.LinkedList;
 
 import mb.boardgametimer.model.Action;
 import mb.boardgametimer.model.ActionType;
+import mb.boardgametimer.model.Play;
 import mb.boardgametimer.sqlite.ActionReaderContract;
 import mb.boardgametimer.sqlite.ActionReaderDbHelper;
 import mb.boardgametimer.sqlite.PlayReaderDbHelper;
@@ -32,7 +33,9 @@ public class MainActivity extends AppCompatActivity {
     private ActionReaderDbHelper actionDbHelper;
     private PlayReaderDbHelper playDbHelper;
     private LinkedList<Action> actions;
+    private LinkedList<Play> plays;
     private ArrayAdapter<Action> actionAdapter;
+    private ArrayAdapter<Play> playAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +55,11 @@ public class MainActivity extends AppCompatActivity {
         actions = new LinkedList<>();
         actionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, actions);
         actionListView.setAdapter(actionAdapter);
+
+        ListView playListView = (ListView) findViewById(R.id.play_list_view_id);
+        plays = new LinkedList<>();
+        playAdapter = new ArrayAdapter<Play>(this, android.R.layout.simple_list_item_1, plays);
+        playListView.setAdapter(playAdapter);
 
         actionDbHelper = new ActionReaderDbHelper(getApplicationContext());
         playDbHelper = new PlayReaderDbHelper(getApplicationContext());
