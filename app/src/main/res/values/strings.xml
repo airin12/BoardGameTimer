@@ -8,8 +8,10 @@
     <string name="resume_button_text">Resume</string>
     <string name="duration">Duration:</string>
     <string name="minutes">minute(s)</string>
-    <string name="comment_window_title">Wprowadź komentarz</string>
-    <string name="comment_window_text">Wprowadź dodatkowy komentarz do tej gry.</string>
-    <string name="comment_window_confirm">Zapisz</string>
-    <string name="comment_window_cancel">Anuluj</string>
+    <string name="comment_window_title">Insert comment</string>
+    <string name="comment_window_text">Insert additional comment for this play</string>
+    <string name="comment_window_confirm">Save</string>
+    <string name="comment_window_cancel">Cancel</string>
+    <string name="clear_button_text">Clear plays</string>
+    <string name="plays_list_title">Saved plays</string>
 </resources>

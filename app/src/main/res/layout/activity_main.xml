@@ -9,37 +9,51 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/start_button_id"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:onClick="startMeasure"
-        android:text="@string/start_button_text" />
+        android:orientation="horizontal">
 
-    <Button
-        android:id="@+id/stop_button_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:onClick="stopMeasure"
-        android:text="@string/end_button_text" />
+        <Button
+            android:id="@+id/start_button_id"
+            android:layout_width="0.0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:onClick="startMeasure"
+            android:text="@string/start_button_text" />
 
-    <Button
-        android:id="@+id/pause_button_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:onClick="pauseMeasure"
-        android:text="@string/pause_button_text" />
+        <Button
+            android:id="@+id/stop_button_id"
+            android:layout_width="0.0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:onClick="stopMeasure"
+            android:text="@string/end_button_text" />
+    </LinearLayout>
 
-    <Button
-        android:id="@+id/resume_button_id"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:onClick="resumeMeasure"
-        android:text="@string/resume_button_text" />
+        android:orientation="horizontal">
+
+
+        <Button
+            android:id="@+id/pause_button_id"
+            android:layout_width="0.0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:onClick="pauseMeasure"
+            android:text="@string/pause_button_text" />
+
+        <Button
+            android:id="@+id/resume_button_id"
+            android:layout_width="0.0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:onClick="resumeMeasure"
+            android:text="@string/resume_button_text" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/duration_text_view_id"
@@ -51,9 +65,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <TextView
+        android:id="@+id/plays_text_view_id"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/plays_list_title" />
+
     <ListView
         android:id="@+id/play_list_view_id"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/clear_button_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:onClick="clearPlays"
+        android:text="@string/clear_button_text" />
 
 </LinearLayout>
