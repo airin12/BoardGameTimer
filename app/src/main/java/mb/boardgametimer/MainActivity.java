@@ -3,8 +3,8 @@ package mb.boardgametimer;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,6 +19,7 @@ import mb.boardgametimer.model.Action;
 import mb.boardgametimer.model.ActionType;
 import mb.boardgametimer.sqlite.ActionReaderContract;
 import mb.boardgametimer.sqlite.ActionReaderDbHelper;
+import mb.boardgametimer.sqlite.PlayReaderDbHelper;
 
 public class MainActivity extends AppCompatActivity {
     private Button startButton;
@@ -28,7 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView durationTextView;
 
-    private ActionReaderDbHelper dbHelper;
+    private ActionReaderDbHelper actionDbHelper;
+    private PlayReaderDbHelper playDbHelper;
     private LinkedList<Action> actions;
     private ArrayAdapter<Action> actionAdapter;
 
@@ -51,7 +53,8 @@ public class MainActivity extends AppCompatActivity {
         actionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, actions);
         actionListView.setAdapter(actionAdapter);
 
-        dbHelper = new ActionReaderDbHelper(getApplicationContext());
+        actionDbHelper = new ActionReaderDbHelper(getApplicationContext());
+        playDbHelper = new PlayReaderDbHelper(getApplicationContext());
     }
 
     private void updateButtonsWithState(ActionType type) {
@@ -102,14 +105,18 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         actions.clear();
 
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        loadActionsData();
+    }
+
+    private void loadActionsData() {
+        SQLiteDatabase actionsDb = actionDbHelper.getReadableDatabase();
 
         String[] projection = {
                 ActionReaderContract.ActionEntry.COLUMN_NAME_TYPE,
                 ActionReaderContract.ActionEntry.COLUMN_NAME_TIMESTAMP
         };
 
-        Cursor cursor = db.query(ActionReaderContract.ActionEntry.TABLE_NAME, projection, null, null, null, null, null);
+        Cursor cursor = actionsDb.query(ActionReaderContract.ActionEntry.TABLE_NAME, projection, null, null, null, null, null);
         while (cursor.moveToNext()) {
             ActionType type = ActionType.valueOf(cursor.getString(
                     cursor.getColumnIndex(ActionReaderContract.ActionEntry.COLUMN_NAME_TYPE)));
@@ -129,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void startMeasure(View view) {
         actions.clear();
-        dbHelper.getWritableDatabase().delete(ActionReaderContract.ActionEntry.TABLE_NAME, null, null);
+        actionDbHelper.getWritableDatabase().delete(ActionReaderContract.ActionEntry.TABLE_NAME, null, null);
         long timestamp = System.currentTimeMillis();
         addNewActionAndUpdateDb(ActionType.START, timestamp);
         updateButtonsWithState(ActionType.START);
@@ -165,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         actions.addFirst(action);
         actionAdapter.notifyDataSetChanged();
 
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        SQLiteDatabase db = actionDbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(ActionReaderContract.ActionEntry.COLUMN_NAME_TYPE, action.getType().toString());
@@ -176,7 +183,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        dbHelper.close();
+        actionDbHelper.close();
+        playDbHelper.close();
         super.onDestroy();
     }
 
