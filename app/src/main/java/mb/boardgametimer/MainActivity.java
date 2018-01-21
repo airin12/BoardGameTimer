@@ -1,6 +1,8 @@
 package mb.boardgametimer;
 
+import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -10,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -20,6 +23,7 @@ import mb.boardgametimer.model.ActionType;
 import mb.boardgametimer.model.Play;
 import mb.boardgametimer.sqlite.ActionReaderContract;
 import mb.boardgametimer.sqlite.ActionReaderDbHelper;
+import mb.boardgametimer.sqlite.PlayReaderContract;
 import mb.boardgametimer.sqlite.PlayReaderDbHelper;
 
 public class MainActivity extends AppCompatActivity {
@@ -112,8 +116,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         actions.clear();
+        plays.clear();
 
         loadActionsData();
+        loadPlaysData();
     }
 
     private void loadActionsData() {
@@ -142,6 +148,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void loadPlaysData() {
+        SQLiteDatabase playsDb = playDbHelper.getReadableDatabase();
+
+        String[] projection = {
+                PlayReaderContract.PlayEntry.COLUMN_NAME_DURATION,
+                PlayReaderContract.PlayEntry.COLUMN_NAME_TEXT,
+                PlayReaderContract.PlayEntry.COLUMN_NAME_TIMESTAMP
+        };
+
+        Cursor cursor = playsDb.query(PlayReaderContract.PlayEntry.TABLE_NAME, projection, null, null, null, null, null);
+        while (cursor.moveToNext()) {
+            int duration = cursor.getInt(cursor.getColumnIndex(PlayReaderContract.PlayEntry.COLUMN_NAME_DURATION));
+            String text = cursor.getString(cursor.getColumnIndex(PlayReaderContract.PlayEntry.COLUMN_NAME_TEXT));
+            long timestamp = cursor.getLong(cursor.getColumnIndex(PlayReaderContract.PlayEntry.COLUMN_NAME_TIMESTAMP));
+            plays.addFirst(new Play(duration, text, timestamp));
+        }
+        cursor.close();
+        playAdapter.notifyDataSetChanged();
+    }
+
     public void startMeasure(View view) {
         actions.clear();
         actionDbHelper.getWritableDatabase().delete(ActionReaderContract.ActionEntry.TABLE_NAME, null, null);
@@ -155,8 +181,46 @@ public class MainActivity extends AppCompatActivity {
         long timestamp = System.currentTimeMillis();
         addNewActionAndUpdateDb(ActionType.STOP, timestamp);
         updateButtonsWithState(ActionType.STOP);
-
+        getCommentFromDialog();
         updateDurationTextViewWithMinutes();
+    }
+
+    private void addNewPlayAndUpdateDb(String text) {
+        MinutesCalculator minutesCalculator = new MinutesCalculator();
+        int minutes = minutesCalculator.getMinutes(actions);
+
+        Play play = new Play(minutes, text, System.currentTimeMillis());
+        plays.addFirst(play);
+        playAdapter.notifyDataSetChanged();
+
+        SQLiteDatabase db = playDbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(PlayReaderContract.PlayEntry.COLUMN_NAME_DURATION, play.getDuration());
+        values.put(PlayReaderContract.PlayEntry.COLUMN_NAME_TEXT, play.getText());
+        values.put(PlayReaderContract.PlayEntry.COLUMN_NAME_TIMESTAMP, play.getTimestamp());
+
+        db.insert(PlayReaderContract.PlayEntry.TABLE_NAME, null, values);
+    }
+
+    private void getCommentFromDialog() {
+        final EditText commentEditText = new EditText(this);
+        new AlertDialog.Builder(this)
+                .setTitle(getResources().getString(R.string.comment_window_title))
+                .setMessage(getResources().getString(R.string.comment_window_text))
+                .setView(commentEditText)
+                .setPositiveButton(getResources().getString(R.string.comment_window_confirm), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        String comment = commentEditText.getText().toString();
+                        addNewPlayAndUpdateDb(comment);
+                    }
+                })
+                .setNegativeButton(getResources().getString(R.string.comment_window_cancel), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        addNewPlayAndUpdateDb("");
+                    }
+                })
+                .show();
     }
 
     private void updateDurationTextViewWithMinutes() {
@@ -200,5 +264,11 @@ public class MainActivity extends AppCompatActivity {
         long timestamp = System.currentTimeMillis();
         addNewActionAndUpdateDb(ActionType.RESUME, timestamp);
         updateButtonsWithState(ActionType.RESUME);
+    }
+
+    public void clearPlays(View view) {
+        plays.clear();
+        playDbHelper.getWritableDatabase().delete(PlayReaderContract.PlayEntry.TABLE_NAME, null, null);
+        playAdapter.notifyDataSetChanged();
     }
 }

@@ -13,7 +13,7 @@ public class PlayReaderDbHelper extends SQLiteOpenHelper {
                     PlayReaderContract.PlayEntry._ID + " INTEGER PRIMARY KEY," +
                     PlayReaderContract.PlayEntry.COLUMN_NAME_DURATION + " INTEGER," +
                     PlayReaderContract.PlayEntry.COLUMN_NAME_TEXT + " TEXT," +
-                    PlayReaderContract.PlayEntry.COLUMN_NAME_TIMESTAMP + " TEXT)";
+                    PlayReaderContract.PlayEntry.COLUMN_NAME_TIMESTAMP + " INTEGER)";
 
     private static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + PlayReaderContract.PlayEntry.TABLE_NAME;
