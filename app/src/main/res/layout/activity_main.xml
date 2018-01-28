@@ -63,7 +63,8 @@
     <ListView
         android:id="@+id/action_list_view_id"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dip"
+        android:layout_weight="0.4" />
 
     <TextView
         android:id="@+id/plays_text_view_id"
@@ -74,7 +75,8 @@
     <ListView
         android:id="@+id/play_list_view_id"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dip"
+        android:layout_weight="0.6" />
 
     <Button
         android:id="@+id/clear_button_id"
